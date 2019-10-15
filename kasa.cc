@@ -28,7 +28,15 @@ namespace {
 		std::cerr << "Error in line " << lineNumber << ": " << text << std::endl;
 	}
 
-	findTickets
+	using Stop = std::pair<int, int>; // first = order in the route, second = time in minutes
+	using Route = std::unordered_map<std::string, Stop>; // key = name of the stop
+	using Routes = std::unordered_map<unsigned int, Route>; // key = number of the route
+
+	void findTickets(const std::string& line, const Routes& routes, tickets) {
+		parseJourney();
+		int timeNeeded = computeTimeNeededForJourney();
+
+	}
 
 }
 
@@ -36,7 +44,7 @@ namespace {
 
 int main() {
 	std::string line;
-	std::unordered_map routes;
+	Routes routes;
 	std::vector tickets;
 
 	for (int i = 1; std::getline(std::cin, line); ++i) {
