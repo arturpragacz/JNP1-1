@@ -2,15 +2,33 @@
 #include <string>
 #include <vector>
 #include <unordered_map>
+#include <regex>
 
 namespace {
 	enum CommandTypes {
 		route,
 		ticket,
-		question
+		question,
+		incorrect
 	};
 
-	CommandTypes commandType(const std::string& line);
+	CommandTypes commandType(const std::string& line) {
+		char firstLetter = line[0];
+		if (firstLetter == '?')
+			return question;
+		else if (firstLetter >= '0' && firstLetter <= '9')
+			return route;
+		else if ((firstLetter >= 'A' && firstLetter <= 'z') || firstLetter == ' ')
+			return ticket;
+		else
+			return incorrect;
+	}
+
+	void printError(int lineNumber, const std::string& text) {
+		std::cerr << "Error in line " << lineNumber << ": " << text << std::endl;
+	}
+
+	findTickets
 
 }
 
@@ -21,7 +39,7 @@ int main() {
 	std::unordered_map routes;
 	std::vector tickets;
 
-	while (std::getline(std::cin, line)) {
+	for (int i = 1; std::getline(std::cin, line); ++i) {
 		switch (commandType(line)) {
 			case route:
 				addRoute(line, routes);
@@ -34,6 +52,9 @@ int main() {
 			case question:
 				findTickets(line, routes, tickets);
 				break;
+
+			case incorrect:
+				printError(i, line);
 		}
 	}
 	return 0;
