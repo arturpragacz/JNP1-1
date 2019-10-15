@@ -35,7 +35,7 @@ namespace {
 	class Patterns {
 	private:
 		static const std::string stopNamePattern;
-		static const std::string RouteNumberPattern;
+		static const std::string routeNumberPattern;
 
 	public:
 		bool parseJourney(const std::string& line, std::vector<std::string>& stopNames, std::vector<int>& routeNumbers) {
@@ -43,7 +43,7 @@ namespace {
 			if (line.substr(0, 2) != initialPattern)
 				return false;
 
-			static const std::string routeNumberOrNothingPattern = "(?:$| " + RouteNumberPattern + ")";
+			static const std::string routeNumberOrNothingPattern = "(?:$| " + routeNumberPattern + ")";
 			static const std::string segmentPattern = "^" + stopNamePattern + routeNumberOrNothingPattern;
 			static const std::regex segmentRegex(segmentPattern);
 
@@ -71,7 +71,7 @@ namespace {
 	} patterns;
 
 	const std::string Patterns::stopNamePattern = "([A-Za-z_^]+)";
-	const std::string Patterns::RouteNumberPattern = "0*([0-9]+)";
+	const std::string Patterns::routeNumberPattern = "0*([0-9]+)";
 
 	int computeTimeNeededForJourney(const Routes& routes, const std::vector<std::string>& stopNames,
 					const std::vector<int>& routeNumbers) {
