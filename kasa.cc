@@ -167,7 +167,7 @@ namespace {
 	const std::string Patterns::routeNumberPattern = "0*([0-9]+)";
 	const std::string Patterns::timePattern = "(1?[0-9]|2[0-3]):([0-5][0-9])";
 	const std::string Patterns::ticketNamePattern = "([A-Za-z ]+)";
-	const std::string Patterns::pricePattern = "([0-9]+).([0-9]{2})";
+	const std::string Patterns::pricePattern = "([0-9]+)\\.([0-9]{2})";
 	const std::string Patterns::validityPattern = "([1-9][0-9]*)";
 
 	//Na podstawie linii wejscia, tworzy nowy kurs i dodaje go do routes.
