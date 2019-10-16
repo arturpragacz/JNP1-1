@@ -175,6 +175,8 @@ namespace {
 	int computeTimeNeededForJourney(const Routes& routes, const std::vector<std::string>& stopNames,
 	                                const std::vector<int>& routeNumbers) {
 		int timeNeeded = 0;
+		std::string stopWithWaiting;
+		int lastTime = -1;
 		for (size_t i = 0; i < routeNumbers.size(); ++i) {
 			try {
 				Route route = routes.at(routeNumbers[i]);
@@ -187,6 +189,12 @@ namespace {
 				int time1 = stop1.second;
 				int time2 = stop2.second;
 
+				if (lastTime != -1 && time1 != lastTime)
+					if (stopWithWaiting.empty())
+						stopWithWaiting = stopNames[i];
+
+				lastTime = time2;
+
 				if (order1 >= order2)
 					return -1;
 				else
@@ -197,7 +205,12 @@ namespace {
 			}
 		}
 
-		return timeNeeded;
+		if (!stopWithWaiting.empty()) {
+			std::cout << ":-( " + stopWithWaiting;
+			return -2;
+		}
+		else
+			return timeNeeded;
 	}
 
 	bool findCheapestTickets(int timeNeeded, std::vector<Ticket>& tickets) {
@@ -214,6 +227,8 @@ namespace {
 		int timeNeeded = computeTimeNeededForJourney(routes, stopNames, routeNumbers);
 		if (timeNeeded == -1)
 			return false;
+		else if (timeNeeded == -2)
+			return true;
 
 		if (!findCheapestTickets(timeNeeded, tickets))
 			std::cout<<":-|\n";
