@@ -246,7 +246,7 @@ namespace {
 			return timeNeeded;
 	}
 
-	bool findCheapestTickets(int timeNeeded, const Tickets& tickets) {
+	int findCheapestTickets(int timeNeeded, const Tickets& tickets) {
 		long long bestPrice = LLONG_MAX;
 		std::vector<std::string> optimalTicketSet;
 		std::string ticketName[3];
@@ -281,7 +281,7 @@ namespace {
 		}
 
 		if (bestPrice == LLONG_MAX)
-			return false;
+			return 0;
 
 		std::cout << "!";
 		for (auto& it : optimalTicketSet)
@@ -289,7 +289,7 @@ namespace {
 
 		std::cout << std::endl;
 
-		return true;
+		return optimalTicketSet.size();
 	}
 
 	int findTickets(const std::string& line, const Routes& routes, const Tickets& tickets) {
