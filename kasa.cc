@@ -173,7 +173,7 @@ namespace {
 
 
 	int computeTimeNeededForJourney(const Routes& routes, const std::vector<std::string>& stopNames,
-	                                const std::vector<int>& routeNumbers) {
+					const std::vector<int>& routeNumbers) {
 		int timeNeeded = 0;
 		std::string stopWithWaiting;
 		int lastTime = -1;
@@ -206,7 +206,7 @@ namespace {
 		}
 
 		if (!stopWithWaiting.empty()) {
-			std::cout << ":-( " + stopWithWaiting;
+			std::cout << ":-( " + stopWithWaiting << std::endl;
 			return -2;
 		}
 		else
@@ -231,7 +231,7 @@ namespace {
 			return true;
 
 		if (!findCheapestTickets(timeNeeded, tickets))
-			std::cout<<":-|\n";
+			std::cout << ":-|" << std::endl;
 
 		return true;
 	}
