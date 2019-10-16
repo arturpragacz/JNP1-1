@@ -38,7 +38,7 @@ namespace {
 	using Stop = std::pair<int, int>; //Przystanek; (kolejnosc na kursie, czas w minutach)
 	using Route = std::unordered_map<std::string, Stop>; //Kurs; Klucz - nazwa przystanku
 	using Routes = std::unordered_map<int, Route>; //Zbior kursow; Klucz - numer kursu
-	using Ticket = std::pair<long long, int>; //Bilet; (cena w groszach, waznosc w minutach)
+	using Ticket = std::pair<long long int, int>; //Bilet; (cena w groszach, waznosc w minutach)
 	using Tickets = std::unordered_map<std::string, Ticket>; //Zbior biletow; Klucz - nazwa biletu
 
 	class Patterns {
@@ -67,7 +67,7 @@ namespace {
 				try {
 					routeId = stoi(idMatch[1]);
 				}
-				catch (std::out_of_range &e) {
+				catch (std::out_of_range& e) {
 					return false;
 				}
 			}
@@ -114,16 +114,22 @@ namespace {
 		}
 
 		bool parseTicket(const std::string& line, std::string& ticketName, Ticket& newTicket) {
-			static const std::regex ticketRegex("^" + ticketNamePattern + " " + pricePattern
-																					+ " " + validityPattern + "$");
+			static const std::regex ticketRegex(ticketNamePattern + " " + pricePattern + " " + validityPattern);
+
 			std::smatch ticketMatch;
-			if (std::regex_search(line.begin(), line.end(), ticketMatch, ticketRegex)) {
+			if (std::regex_match(line.begin(), line.end(), ticketMatch, ticketRegex)) {
 				ticketName = ticketMatch[1];
-				newTicket.first = stoll(ticketMatch[2]) * 100 + stoll(ticketMatch[3]);
-				newTicket.second = stoi(ticketMatch[4]);
+				try {
+					newTicket.first = stoll(ticketMatch[2]) * 100 + stoll(ticketMatch[3]);
+					newTicket.second = stoi(ticketMatch[4]);
+				}
+				catch (std::out_of_range &e) {
+					return false;
+				}
 				return true;
 			}
-			return false;
+			else
+				return false;
 		}
 
 		bool parseJourney(const std::string& line, std::vector<std::string>& stopNames, std::vector<int>& routeNumbers) {
