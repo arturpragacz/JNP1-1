@@ -284,7 +284,7 @@ namespace {
 			return 0;
 
 		std::cout << "! " << optimalTicketSet[0];
-		for (int i = 1; i < optimalTicketSet.size(); ++i)
+		for (size_t i = 1; i < optimalTicketSet.size(); ++i)
 			std::cout << "; " << optimalTicketSet[i];
 
 		std::cout << std::endl;
