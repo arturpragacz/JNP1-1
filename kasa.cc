@@ -60,7 +60,7 @@ namespace {
 			std::smatch idMatch;
 			if (std::regex_search(line.begin(), line.end(), idMatch, idRegex)) {
 				try {
-					routeId = stoi(idMatch[1]);
+					routeId = static_cast<unsigned int>(stoi(idMatch[1]));
 				}
 				catch (std::out_of_range &e) {
 					return false;
@@ -244,8 +244,12 @@ int main() {
 					printError(i, line);
 				break;
 
+			case empty:
+				break;
+
 			case incorrect:
 				printError(i, line);
+				break;
 		}
 	}
 	return 0;
