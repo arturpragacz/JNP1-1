@@ -51,14 +51,14 @@ namespace {
 		static const std::string validityPattern;
 
 		//Sprawdza czy o danej godzinie tramwaje moga byc jeszcze czynne.
-		bool isValidTime(int timeInMinutes) {
+		static bool isValidTime(int timeInMinutes) {
 			return timeInMinutes >= 5 * 60 + 55 && timeInMinutes <= 21 * 60 + 21;
 		}
 
 	public:
 		//Bierze linie wejscia i tworzy na jej podstawie nowy kurs pod newRoute. Zapisuje
 		//jego numer pod routeId. Zwraca true jesli zakonczono sukcesem, false jesli wystapil blad.
-		bool parseRoute(const std::string& line, int& routeId, Route& newRoute) {
+		static bool parseRoute(const std::string& line, int& routeId, Route& newRoute) {
 			//Parsowanie numeru kursu.
 			static const std::regex idRegex("^" + routeNumberPattern);
 
@@ -113,7 +113,7 @@ namespace {
 			return true;
 		}
 
-		bool parseTicket(const std::string& line, std::string& ticketName, Ticket& newTicket) {
+		static bool parseTicket(const std::string& line, std::string& ticketName, Ticket& newTicket) {
 			static const std::regex ticketRegex(ticketNamePattern + " " + pricePattern + " " + validityPattern);
 
 			std::smatch ticketMatch;
@@ -132,7 +132,7 @@ namespace {
 				return false;
 		}
 
-		bool parseJourney(const std::string& line, std::vector<std::string>& stopNames, std::vector<int>& routeNumbers) {
+		static bool parseJourney(const std::string& line, std::vector<std::string>& stopNames, std::vector<int>& routeNumbers) {
 			if (line[0] != '?')
 				return false;
 
@@ -161,7 +161,7 @@ namespace {
 			return routeNumbers.size() > 0;
 		}
 
-	} patterns;
+	};
 
 	const std::string Patterns::stopNamePattern = "([A-Za-z_^]+)";
 	const std::string Patterns::routeNumberPattern = "0*([0-9]+)";
@@ -177,7 +177,7 @@ namespace {
 		int routeId;
 		Route newRoute;
 
-		if (!patterns.parseRoute(line, routeId, newRoute))
+		if (!Patterns::parseRoute(line, routeId, newRoute))
 			return false;
 
 		//Juz istnieje kurs o takim numerze.
@@ -193,7 +193,7 @@ namespace {
 		std::string ticketName;
 		Ticket newTicket;
 
-		if (!patterns.parseTicket(line, ticketName, newTicket))
+		if (!Patterns::parseTicket(line, ticketName, newTicket))
 			return false;
 
 		//Juz istnieje bilet o takiej nazwie.
@@ -296,7 +296,7 @@ namespace {
 	int findTickets(const std::string& line, const Routes& routes, const Tickets& tickets) {
 		std::vector<std::string> stopNames;
 		std::vector<int> routeNumbers;
-		if (!patterns.parseJourney(line, stopNames, routeNumbers))
+		if (!Patterns::parseJourney(line, stopNames, routeNumbers))
 			return -1;
 
 		int timeNeeded = computeTimeNeededForJourney(routes, stopNames, routeNumbers);
