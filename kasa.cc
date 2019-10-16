@@ -249,19 +249,19 @@ namespace {
 	int findCheapestTickets(int timeNeeded, const Tickets& tickets) {
 		long long bestPrice = LLONG_MAX;
 		std::vector<std::string> optimalTicketSet;
-		std::string ticketName[3];
+		std::string ticketNames[3];
 		Ticket ticket[3];
 
 		for (auto& it0 : tickets) {
-			ticketName[0] = it0.first;
+			ticketNames[0] = it0.first;
 			ticket[0] = it0.second;
 
 			for (auto& it1 : tickets) {
-				ticketName[1] = it1.first;
+				ticketNames[1] = it1.first;
 				ticket[1] = it1.second;
 
 				for (auto& it2 : tickets) {
-					ticketName[2] = it2.first;
+					ticketNames[2] = it2.first;
 					ticket[2] = it2.second;
 
 					if (timeNeeded <= ticket[0].second + ticket[1].second + ticket[2].second) {
@@ -270,7 +270,7 @@ namespace {
 							bestPrice = newPrice;
 
 							optimalTicketSet.clear();
-							for (auto it : ticketName) {
+							for (const auto& it : ticketNames) {
 								if (!it.empty())
 									optimalTicketSet.push_back(it);
 							}
@@ -289,6 +289,7 @@ namespace {
 
 		std::cout << std::endl;
 
+		// size is at most 3, so we can safely return with int
 		return optimalTicketSet.size();
 	}
 
