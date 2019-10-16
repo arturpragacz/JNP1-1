@@ -144,34 +144,6 @@ namespace {
 	const std::string Patterns::timePattern = "(1?[0-9]|2[0-3]):([0-5][0-9])";
 
 
-	int computeTimeNeededForJourney(const Routes& routes, const std::vector<std::string>& stopNames,
-																	const std::vector<int>& routeNumbers) {
-		int timeNeeded = 0;
-		for (size_t i = 0; i < routeNumbers.size(); ++i) {
-			try {
-				Route route = routes.at(routeNumbers[i]);
-
-				Stop stop1 = route.at(stopNames[i]);
-				Stop stop2 = route.at(stopNames[i + 1]);
-
-				int order1 = stop1.first;
-				int order2 = stop2.first;
-				int time1 = stop1.second;
-				int time2 = stop2.second;
-
-				if (order1 >= order2)
-					return -1;
-				else
-					timeNeeded += time2 - time1;
-			}
-			catch (std::out_of_range& e) {
-				return -1;
-			}
-		}
-
-		return timeNeeded;
-	}
-
 	//Na podstawie linii wejscia, tworzy nowy kurs i dodaje go do routes.
 	//Zwraca true jesli zakonczono sukcesem, false jesli wystapil blad.
 	bool addRoute(const std::string& line, Routes& routes)
@@ -197,6 +169,35 @@ namespace {
 
 		tickets.push_back(newTicket);
 		return true;
+	}
+
+
+	int computeTimeNeededForJourney(const Routes& routes, const std::vector<std::string>& stopNames,
+	                                const std::vector<int>& routeNumbers) {
+		int timeNeeded = 0;
+		for (size_t i = 0; i < routeNumbers.size(); ++i) {
+			try {
+				Route route = routes.at(routeNumbers[i]);
+
+				Stop stop1 = route.at(stopNames[i]);
+				Stop stop2 = route.at(stopNames[i + 1]);
+
+				int order1 = stop1.first;
+				int order2 = stop2.first;
+				int time1 = stop1.second;
+				int time2 = stop2.second;
+
+				if (order1 >= order2)
+					return -1;
+				else
+					timeNeeded += time2 - time1;
+			}
+			catch (std::out_of_range& e) {
+				return -1;
+			}
+		}
+
+		return timeNeeded;
 	}
 
 	bool findCheapestTickets(int timeNeeded, std::vector<Ticket>& tickets) {
