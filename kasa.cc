@@ -292,22 +292,23 @@ namespace {
 		return true;
 	}
 
-	bool findTickets(const std::string& line, const Routes& routes, const Tickets& tickets) {
+	int findTickets(const std::string& line, const Routes& routes, const Tickets& tickets) {
 		std::vector<std::string> stopNames;
 		std::vector<int> routeNumbers;
 		if (!patterns.parseJourney(line, stopNames, routeNumbers))
-			return false;
+			return -1;
 
 		int timeNeeded = computeTimeNeededForJourney(routes, stopNames, routeNumbers);
 		if (timeNeeded == -1)
-			return false;
+			return -1;
 		else if (timeNeeded == -2)
-			return true;
+			return 0;
 
-		if (!findCheapestTickets(timeNeeded, tickets))
+		int ticketsFound = findCheapestTickets(timeNeeded, tickets);
+		if (ticketsFound == 0)
 			std::cout << ":-|" << std::endl;
 
-		return true;
+		return ticketsFound;
 	}
 }
 
@@ -317,6 +318,7 @@ int main() {
 	Routes routes;
 	Tickets tickets;
 	tickets[""] = Ticket(0, 0); //Pusty bilet.
+	int allFoundTickets = 0;
 
 	for (int i = 1; std::getline(std::cin, line); ++i) {
 		switch (commandType(line)) {
@@ -331,9 +333,14 @@ int main() {
 				break;
 
 			case question:
-				if (!findTickets(line, routes, tickets))
+			{
+				int foundTickets = findTickets(line, routes, tickets);
+				if (foundTickets == -1)
 					printError(i, line);
+				else
+					allFoundTickets += foundTickets;
 				break;
+			}
 
 			case empty:
 				break;
@@ -343,5 +350,8 @@ int main() {
 				break;
 		}
 	}
+
+	std::cout << allFoundTickets;
+
 	return 0;
 }
