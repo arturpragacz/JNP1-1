@@ -110,7 +110,7 @@ namespace {
 					return false;
 			}
 
-			return true;
+			return !newRoute.empty();
 		}
 
 		static bool parseTicket(const std::string& line, std::string& ticketName, Ticket& newTicket) {
