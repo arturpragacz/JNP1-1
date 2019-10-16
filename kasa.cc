@@ -32,20 +32,7 @@ namespace {
 	using Stop = std::pair<int, int>; //Przystanek; (kolejnosc na kursie, czas w minutach)
 	using Route = std::unordered_map<std::string, Stop>; //Kurs; Klucz - nazwa przystanku
 	using Routes = std::unordered_map<unsigned int, Route>; //Zbior kursow; Klucz - numer kursu
-	using Ticket = std::pair<std::string, std::pair<long long, int>>; //(nazwa, (cena, waznosc w minutach))
-
-
-	void printTicketName(Ticket& ticket) {
-		std::cout<<ticket.first;
-	}
-
-	long long getTicketPrice(Ticket& ticket) {
-		return ticket.second.first;
-	}
-
-	int getTicketValidity(Ticket& ticket) {
-		return ticket.second.second;
-	}
+	using Ticket = std::tuple<std::string, long long, int>; //(nazwa, cena, waznosc w minutach)
 
 	//Sprawdza czy o danej godzinie tramwaje moga byc jeszcze czynne.
 	bool validTime(int timeInMinutes) {
@@ -190,7 +177,10 @@ namespace {
 	}
 
 	bool addTicket(const std::string& line, std::vector<Ticket>& tickets) {
-		//...
+		//Parsujemy linie i bierzemy z niej informacje o bilecie.
+		Ticket newTicket;
+
+		tickets.push_back(newTicket);
 		return true;
 	}
 
