@@ -9,19 +9,24 @@ namespace {
 		route,
 		ticket,
 		question,
+		empty,
 		incorrect
 	};
 
 	CommandTypes commandType(const std::string& line) {
-		char firstLetter = line[0];
-		if (firstLetter == '?')
-			return question;
-		else if (firstLetter >= '0' && firstLetter <= '9')
-			return route;
-		else if ((firstLetter >= 'A' && firstLetter <= 'z') || firstLetter == ' ')
-			return ticket;
-		else
-			return incorrect;
+		if (line.empty())
+			return empty;
+		else {
+			char firstLetter = line[0];
+			if (firstLetter == '?')
+				return question;
+			else if (firstLetter >= '0' && firstLetter <= '9')
+				return route;
+			else if ((firstLetter >= 'A' && firstLetter <= 'z') || firstLetter == ' ')
+				return ticket;
+			else
+				return incorrect;
+		}
 	}
 
 	void printError(int lineNumber, const std::string& text) {
@@ -51,7 +56,7 @@ namespace {
 			for (auto it = line.begin() + 2; it != line.end(); ) {
 				if (std::regex_search(it, line.end(), segmentMatch, segmentRegex)) {
 					stopNames.push_back(segmentMatch[1]);
-					if (segmentMatch.size() == 3) {
+					if (segmentMatch[2].length() != 0) {
 						try {
 							routeNumbers.push_back(stoi(segmentMatch[2]));
 						}
@@ -65,7 +70,7 @@ namespace {
 					return false;
 			}
 
-			return true;
+			return routeNumbers.size() > 0;
 		}
 
 	} patterns;
