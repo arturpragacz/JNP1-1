@@ -39,32 +39,36 @@ namespace {
 	using Routes = std::unordered_map<unsigned int, Route>; //Zbior kursow; Klucz - numer kursu
 	using Ticket = std::tuple<std::string, long long, int>; //(nazwa, cena, waznosc w minutach)
 
-	//Sprawdza czy o danej godzinie tramwaje moga byc jeszcze czynne.
-	bool validTime(int timeInMinutes) {
-		return timeInMinutes >= 5 * 60 + 55 && timeInMinutes <= 21 * 60 + 21;
-	}
-
 	class Patterns {
 	private:
 		static const std::string stopNamePattern;
 		static const std::string routeNumberPattern;
 		static const std::string timePattern;
 
+		//Sprawdza czy o danej godzinie tramwaje moga byc jeszcze czynne.
+		bool isValidTime(int timeInMinutes) {
+			return timeInMinutes >= 5 * 60 + 55 && timeInMinutes <= 21 * 60 + 21;
+		}
+
 	public:
 		//Bierze linie wejscia i tworzy na jej podstawie nowy kurs pod newRoute. Zapisuje
 		//jego numer pod routeId. Zwraca true jesli zakonczono sukcesem, false jesli wystapil blad.
 		bool parseRoute(const std::string& line, unsigned int& routeId, Route& newRoute) {
 			//Parsowanie numeru kursu.
-			auto it = line.begin();
-
 			static const std::regex idRegex("^" + routeNumberPattern);
-			std::smatch idMatch;
-			if (std::regex_search(line.begin(), line.end(), idMatch, idRegex))
-				routeId = stoi(idMatch[1]);
-			else
-				return false;
 
-			it = idMatch.suffix().first;
+			std::smatch idMatch;
+			if (std::regex_search(line.begin(), line.end(), idMatch, idRegex)) {
+				try {
+					routeId = stoi(idMatch[1]);
+				}
+				catch (std::out_of_range &e) {
+					return false;
+				}
+			}
+			else {
+				return false;
+			}
 
 			//Parsowanie trasy kursu.
 			unsigned int orderInRoute = 0; //Kolejnosc aktualnie parsowanego przystanku na trasie kursu.
@@ -74,16 +78,17 @@ namespace {
 			static const std::regex segmentRegex(segmentPattern);
 
 			std::smatch segmentMatch;
-			while (it != line.end()) {
+			for (auto it = idMatch.suffix().first; it != line.end(); ) {
 				if (std::regex_search(it, line.end(), segmentMatch, segmentRegex)) {
 					std::string stopName = segmentMatch[3];
 					if (newRoute.find(stopName) != newRoute.end())
-						return false; //Przystanek powtarza sie na trasie kursu.
+						return false; // Przystanek powtarza sie na trasie kursu.
 
+					// we don't have to catch std::out_of_range, because our regex matching ensures it doesn't happen
 					int hours = stoi(segmentMatch[1]);
 					int minutes = stoi(segmentMatch[2]);
 					int currentTime =  hours * 60 + minutes;
-					if (!validTime(currentTime))
+					if (!isValidTime(currentTime))
 						return false;
 
 					//Sprawdzamy czy godziny przyjazdow sa rosnace.
@@ -112,7 +117,7 @@ namespace {
 			static const std::regex segmentRegex(segmentPattern);
 
 			std::smatch segmentMatch;
-			for (auto it = line.begin() + 1; it != line.end();) {
+			for (auto it = line.begin() + 1; it != line.end(); ) {
 				if (std::regex_search(it, line.end(), segmentMatch, segmentRegex)) {
 					stopNames.push_back(segmentMatch[1]);
 					if (segmentMatch[2].length() != 0) {
