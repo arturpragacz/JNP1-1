@@ -283,9 +283,9 @@ namespace {
 		if (bestPrice == LLONG_MAX)
 			return 0;
 
-		std::cout << "!";
-		for (auto& it : optimalTicketSet)
-			std::cout << " " << it;
+		std::cout << "! " << optimalTicketSet[0];
+		for (int i = 1; i < optimalTicketSet.size(); ++i)
+			std::cout << "; " << optimalTicketSet[i];
 
 		std::cout << std::endl;
 
