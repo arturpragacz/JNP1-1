@@ -316,7 +316,7 @@ int main() {
 	std::string line;
 	Routes routes;
 	Tickets tickets;
-	tickets[""] = Ticket(0, 0); //Pusty bilet.
+	tickets[""] = Ticket(0, -1); //Pusty bilet.
 
 	for (int i = 1; std::getline(std::cin, line); ++i) {
 		switch (commandType(line)) {
