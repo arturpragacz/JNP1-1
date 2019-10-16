@@ -243,7 +243,7 @@ namespace {
 			return -2;
 		}
 		else
-			return timeNeeded;
+			return timeNeeded + 1;
 	}
 
 	int findCheapestTickets(int timeNeeded, const Tickets& tickets) {
