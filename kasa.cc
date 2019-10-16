@@ -29,9 +29,23 @@ namespace {
 		std::cerr << "Error in line " << lineNumber << ": " << text << std::endl;
 	}
 
-	using Stop = std::pair<int, int>; //Przystanek; first - kolejnosc na kursie, second - czas w minutach
+	using Stop = std::pair<int, int>; //Przystanek; (kolejnosc na kursie, czas w minutach)
 	using Route = std::unordered_map<std::string, Stop>; //Kurs; Klucz - nazwa przystanku
 	using Routes = std::unordered_map<unsigned int, Route>; //Zbior kursow; Klucz - numer kursu
+	using Ticket = std::pair<std::string, std::pair<long long, int>>; //(nazwa, (cena, waznosc w minutach))
+
+
+	void printTicketName(Ticket& ticket) {
+		std::cout<<ticket.first;
+	}
+
+	long long getTicketPrice(Ticket& ticket) {
+		return ticket.second.first;
+	}
+
+	int getTicketValidity(Ticket& ticket) {
+		return ticket.second.second;
+	}
 
 	//Sprawdza czy o danej godzinie tramwaje moga byc jeszcze czynne.
 	bool validTime(int timeInMinutes) {
@@ -175,24 +189,29 @@ namespace {
 		return true;
 	}
 
-	bool addTicket(const std::string& line, std::vector<int>& tickets) {
+	bool addTicket(const std::string& line, std::vector<Ticket>& tickets) {
 		//...
 		return true;
 	}
 
-	bool findTickets(const std::string& line, const Routes& routes, std::vector<int>& tickets) {
+	bool findCheapestTickets(int timeNeeded, std::vector<Ticket>& tickets) {
+		//...
+		return true;
+	}
+
+	bool findTickets(const std::string& line, const Routes& routes, std::vector<Ticket>& tickets) {
 		std::vector<std::string> stopNames;
 		std::vector<int> routeNumbers;
 		if (!patterns.parseJourney(line, stopNames, routeNumbers))
 			return false;
 
-
 		int timeNeeded = computeTimeNeededForJourney(routes, stopNames, routeNumbers);
 		if (timeNeeded == -1)
 			return false;
 
-		//findCheapestTickets(timeNeeded);
-		//...
+		if (!findCheapestTickets(timeNeeded, tickets))
+			std::cout<<":-|\n";
+
 		return true;
 	}
 }
@@ -201,12 +220,9 @@ namespace {
 int main() {
 	std::string line;
 	Routes routes;
-	std::vector<int> tickets;
+	std::vector<Ticket> tickets;
 
 	for (int i = 1; std::getline(std::cin, line); ++i) {
-		//test czy taby sie nie psuja
-
-			//test
 		switch (commandType(line)) {
 			case route:
 				if (!addRoute(line, routes))
