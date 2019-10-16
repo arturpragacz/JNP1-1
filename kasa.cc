@@ -222,7 +222,9 @@ namespace {
 				int time1 = stop1.second;
 				int time2 = stop2.second;
 
-				if (lastTime != -1 && time1 != lastTime)
+				if (time1 < lastTime)
+					return -1;
+				else if (time1 > lastTime && lastTime != -1)
 					if (stopWithWaiting.empty())
 						stopWithWaiting = stopNames[i];
 
