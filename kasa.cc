@@ -3,6 +3,7 @@
 #include <vector>
 #include <unordered_map>
 #include <regex>
+#include <climits>
 
 
 namespace {
@@ -32,7 +33,8 @@ namespace {
 	using Stop = std::pair<int, int>; //Przystanek; (kolejnosc na kursie, czas w minutach)
 	using Route = std::unordered_map<std::string, Stop>; //Kurs; Klucz - nazwa przystanku
 	using Routes = std::unordered_map<unsigned int, Route>; //Zbior kursow; Klucz - numer kursu
-	using Ticket = std::tuple<std::string, long long, int>; //(nazwa, cena, waznosc w minutach)
+	using Ticket = std::pair<long long, int>; //Bilet; (cena w groszach, waznosc w minutach)
+	using Tickets = std::unordered_map<std::string, Ticket>; //Zbior biletow; Klucz - nazwa biletu
 
 	//Sprawdza czy o danej godzinie tramwaje moga byc jeszcze czynne.
 	bool validTime(int timeInMinutes) {
@@ -44,6 +46,9 @@ namespace {
 		static const std::string stopNamePattern;
 		static const std::string routeNumberPattern;
 		static const std::string timePattern;
+		static const std::string ticketNamePattern;
+		static const std::string pricePattern;
+		static const std::string validityPattern;
 
 	public:
 		//Bierze linie wejscia i tworzy na jej podstawie nowy kurs pod newRoute. Zapisuje
@@ -98,6 +103,19 @@ namespace {
 			return true;
 		}
 
+		bool parseTicket(const std::string& line, std::string& ticketName, Ticket& newTicket) {
+			static const std::regex ticketRegex("^" + ticketNamePattern + " " + pricePattern
+																					+ " " + validityPattern + "$");
+			std::smatch ticketMatch;
+			if (std::regex_search(line.begin(), line.end(), ticketMatch, ticketRegex)) {
+				ticketName = ticketMatch[1];
+				newTicket.first = stoll(ticketMatch[2]) * 100 + stoll(ticketMatch[3]);
+				newTicket.second = stoi(ticketMatch[4]);
+				return true;
+			}
+			return false;
+		}
+
 		bool parseJourney(const std::string& line, std::vector<std::string>& stopNames, std::vector<int>& routeNumbers) {
 			if (line[0] != '?')
 				return false;
@@ -127,7 +145,9 @@ namespace {
 	const std::string Patterns::stopNamePattern = "([A-Za-z_^]+)";
 	const std::string Patterns::routeNumberPattern = "0*([0-9]+)";
 	const std::string Patterns::timePattern = "(1?[0-9]|2[0-3]):([0-5][0-9])";
-
+	const std::string Patterns::ticketNamePattern = "([A-Za-z ]+)";
+	const std::string Patterns::pricePattern = "([0-9]+).([0-9]{2})";
+	const std::string Patterns::validityPattern = "([1-9][0-9]*)";
 
 	int computeTimeNeededForJourney(const Routes& routes, const std::vector<std::string>& stopNames,
 																	const std::vector<int>& routeNumbers) {
@@ -159,8 +179,7 @@ namespace {
 
 	//Na podstawie linii wejscia, tworzy nowy kurs i dodaje go do routes.
 	//Zwraca true jesli zakonczono sukcesem, false jesli wystapil blad.
-	bool addRoute(const std::string& line, Routes& routes)
-	{
+	bool addRoute(const std::string& line, Routes& routes) {
 		//Parsujemy linie i bierzemy z niej informacje o kursie.
 		unsigned int routeId;
 		Route newRoute;
@@ -176,20 +195,67 @@ namespace {
 		return true;
 	}
 
-	bool addTicket(const std::string& line, std::vector<Ticket>& tickets) {
+	bool addTicket(const std::string& line, Tickets& tickets) {
 		//Parsujemy linie i bierzemy z niej informacje o bilecie.
+		std::string ticketName;
 		Ticket newTicket;
 
-		tickets.push_back(newTicket);
+		if (!patterns.parseTicket(line, ticketName, newTicket))
+			return false;
+
+		//Juz istnieje bilet o takiej nazwie.
+		if (tickets.find(ticketName) != tickets.end())
+			return false;
+		//Wrzucamy nowy bilet do mapy biletow (tickets).
+		tickets[ticketName] = newTicket;
 		return true;
 	}
 
-	bool findCheapestTickets(int timeNeeded, std::vector<Ticket>& tickets) {
-		//...
+	bool findCheapestTickets(int timeNeeded, const Tickets& tickets) {
+		long long bestPrice = LLONG_MAX;
+		std::vector<std::string> optimalTicketSet;
+		std::string ticketName[3];
+		Ticket ticket[3];
+
+		for (auto& it0 : tickets) {
+			ticketName[0] = it0.first;
+			ticket[0] = it0.second;
+
+			for (auto& it1 : tickets) {
+				ticketName[1] = it1.first;
+				ticket[1] = it1.second;
+
+				for (auto& it2 : tickets) {
+					ticketName[2] = it2.first;
+					ticket[2] = it2.second;
+
+					if (timeNeeded <= ticket[0].second + ticket[1].second + ticket[2].second) {
+						long long newPrice = ticket[0].first + ticket[1].first + ticket[2].first;
+						if (newPrice < bestPrice) {
+							bestPrice = newPrice;
+
+							optimalTicketSet = std::vector<std::string>();
+							for (auto it : ticketName) {
+								if (!it.empty())
+									optimalTicketSet.push_back(it);
+							}
+						}
+					}
+				}
+			}
+		}
+
+		if (bestPrice == LLONG_MAX)
+			return false;
+
+		std::cout<<"!";
+		for (auto& it : optimalTicketSet)
+			std::cout<<" "<<it;
+
 		return true;
 	}
 
-	bool findTickets(const std::string& line, const Routes& routes, std::vector<Ticket>& tickets) {
+	bool findTickets(const std::string& line, const Routes& routes, const Tickets& tickets) {
 		std::vector<std::string> stopNames;
 		std::vector<int> routeNumbers;
 		if (!patterns.parseJourney(line, stopNames, routeNumbers))
@@ -210,7 +276,8 @@ namespace {
 int main() {
 	std::string line;
 	Routes routes;
-	std::vector<Ticket> tickets;
+	Tickets tickets;
+	tickets[""] = Ticket(0, 0); //Pusty bilet.
 
 	for (int i = 1; std::getline(std::cin, line); ++i) {
 		switch (commandType(line)) {
