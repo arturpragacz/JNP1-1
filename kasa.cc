@@ -158,7 +158,7 @@ namespace {
 					return false;
 			}
 
-			return routeNumbers.size() > 0;
+			return stopNames.size() == routeNumbers.size() + 1 && !routeNumbers.empty();
 		}
 
 	};
