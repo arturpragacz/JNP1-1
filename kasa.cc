@@ -37,7 +37,7 @@ namespace {
 
 	using Stop = std::pair<int, int>; //Przystanek; (kolejnosc na kursie, czas w minutach)
 	using Route = std::unordered_map<std::string, Stop>; //Kurs; Klucz - nazwa przystanku
-	using Routes = std::unordered_map<unsigned int, Route>; //Zbior kursow; Klucz - numer kursu
+	using Routes = std::unordered_map<int, Route>; //Zbior kursow; Klucz - numer kursu
 	using Ticket = std::pair<long long, int>; //Bilet; (cena w groszach, waznosc w minutach)
 	using Tickets = std::unordered_map<std::string, Ticket>; //Zbior biletow; Klucz - nazwa biletu
 
@@ -58,14 +58,14 @@ namespace {
 	public:
 		//Bierze linie wejscia i tworzy na jej podstawie nowy kurs pod newRoute. Zapisuje
 		//jego numer pod routeId. Zwraca true jesli zakonczono sukcesem, false jesli wystapil blad.
-		bool parseRoute(const std::string& line, unsigned int& routeId, Route& newRoute) {
+		bool parseRoute(const std::string& line, int& routeId, Route& newRoute) {
 			//Parsowanie numeru kursu.
 			static const std::regex idRegex("^" + routeNumberPattern);
 
 			std::smatch idMatch;
 			if (std::regex_search(line.begin(), line.end(), idMatch, idRegex)) {
 				try {
-					routeId = static_cast<unsigned int>(stoi(idMatch[1]));
+					routeId = stoi(idMatch[1]);
 				}
 				catch (std::out_of_range &e) {
 					return false;
@@ -168,7 +168,7 @@ namespace {
 	//Zwraca true jesli zakonczono sukcesem, false jesli wystapil blad.
 	bool addRoute(const std::string& line, Routes& routes) {
 		//Parsujemy linie i bierzemy z niej informacje o kursie.
-		unsigned int routeId;
+		int routeId;
 		Route newRoute;
 
 		if (!patterns.parseRoute(line, routeId, newRoute))
