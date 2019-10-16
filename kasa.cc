@@ -4,6 +4,7 @@
 #include <unordered_map>
 #include <regex>
 
+
 namespace {
   enum CommandTypes {
     route,
@@ -97,33 +98,27 @@ namespace {
     }
 
     bool parseJourney(const std::string& line, std::vector<std::string>& stopNames, std::vector<int>& routeNumbers) {
-      static const std::string initialPattern = "? ";
-      if (line.substr(0, 2) != initialPattern)
+      if (line[0] != '?')
         return false;
 
       static const std::string routeNumberOrNothingPattern = "(?:$| " + routeNumberPattern + ")";
-      static const std::string segmentPattern = "^" + stopNamePattern + routeNumberOrNothingPattern;
+      static const std::string segmentPattern = "^ " + stopNamePattern + routeNumberOrNothingPattern;
       static const std::regex segmentRegex(segmentPattern);
 
       std::smatch segmentMatch;
-      for (auto it = line.begin() + 2; it != line.end(); ) {
+      for (auto it = line.begin() + 1; it != line.end(); ) {
         if (std::regex_search(it, line.end(), segmentMatch, segmentRegex)) {
           stopNames.push_back(segmentMatch[1]);
-          if (segmentMatch.size() == 3) {
-            try {
-              routeNumbers.push_back(stoi(segmentMatch[2]));
-            }
-            catch (std::out_of_range& e) {
-              return false;
-            }
-          }
+          if (segmentMatch.size() >= 3 && !segmentMatch[2].str().empty())
+            routeNumbers.push_back(stoi(segmentMatch[2]));
+
           it = segmentMatch.suffix().first;
         }
         else
           return false;
       }
 
-      return true;
+      return stopNames.size() == routeNumbers.size() + 1;
     }
 
   } patterns;
@@ -172,13 +167,6 @@ namespace {
     if (!patterns.parseRoute(line, routeId, newRoute))
       return false;
 
-      /*Wypisywanie kursu:
-      cerr<<"id: "<<routeId<<"\nPrzystanki:\n";
-      for (auto it : newRoute)
-        cerr<<it.first<<"A "<<it.second.first<<"B\n"<<it.second.second<<"C\n";
-      cerr<<"\n\n";
-      */
-
     //Juz istnieje kurs o takim numerze.
     if (routes.find(routeId) != routes.end())
       return false;
@@ -197,6 +185,8 @@ namespace {
     std::vector<int> routeNumbers;
     if (!patterns.parseJourney(line, stopNames, routeNumbers))
       return false;
+
+    return true;
 
     int timeNeeded = computeTimeNeededForJourney(routes, stopNames, routeNumbers);
     if (timeNeeded == -1)
