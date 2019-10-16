@@ -354,7 +354,7 @@ int main() {
 		}
 	}
 
-	std::cout << allFoundTickets;
+	std::cout << allFoundTickets << std::endl;
 
 	return 0;
 }
