@@ -4,6 +4,9 @@
 #include <unordered_map>
 #include <regex>
 
+////
+using namespace std;
+////
 
 namespace {
   enum CommandTypes {
@@ -106,7 +109,7 @@ namespace {
       static const std::regex segmentRegex(segmentPattern);
 
       std::smatch segmentMatch;
-      for (auto it = line.begin() + 1; it != line.end(); ) {
+      for (auto it = line.begin() + 1; it != line.end();) {
         if (std::regex_search(it, line.end(), segmentMatch, segmentRegex)) {
           stopNames.push_back(segmentMatch[1]);
           if (segmentMatch.size() >= 3 && !segmentMatch[2].str().empty())
@@ -186,7 +189,6 @@ namespace {
     if (!patterns.parseJourney(line, stopNames, routeNumbers))
       return false;
 
-    return true;
 
     int timeNeeded = computeTimeNeededForJourney(routes, stopNames, routeNumbers);
     if (timeNeeded == -1)
