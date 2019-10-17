@@ -7,6 +7,7 @@
 
 
 namespace {
+	// typy komend
 	enum CommandTypes {
 		route,
 		ticket,
@@ -15,6 +16,7 @@ namespace {
 		incorrect
 	};
 
+	// ustala typ komendy
 	CommandTypes commandType(const std::string& line) {
 		if (line.empty())
 			return empty;
@@ -35,31 +37,36 @@ namespace {
 		std::cerr << "Error in line " << lineNumber << ": " << text << std::endl;
 	}
 
-	using Stop = std::pair<int, int>; //Przystanek; (kolejnosc na kursie, czas w minutach)
-	using Route = std::unordered_map<std::string, Stop>; //Kurs; Klucz - nazwa przystanku
-	using Routes = std::unordered_map<int, Route>; //Zbior kursow; Klucz - numer kursu
-	using Ticket = std::pair<long long int, int>; //Bilet; (cena w groszach, waznosc w minutach)
-	using Tickets = std::unordered_map<std::string, Ticket>; //Zbior biletow; Klucz - nazwa biletu
+	// przystanek: (kolejność na kursie, czas w minutach)
+	using Stop = std::pair<int, int>;
+	// kurs: klucz - nazwa przystanku
+	using Route = std::unordered_map<std::string, Stop>;
+	// zbiór kursów: klucz - numer kursu
+	using Routes = std::unordered_map<int, Route>;
+	// bilet: (cena w groszach, ważność w minutach)
+	using Ticket = std::pair<long long int, int>;
+	// zbiór biletów: klucz - nazwa biletu
+	using Tickets = std::unordered_map<std::string, Ticket>;
 
+	// pomocnicza w pełni statyczna klasa, używana do parsowania
 	class Patterns {
 	private:
-		static const std::string stopNamePattern;
-		static const std::string routeNumberPattern;
-		static const std::string timePattern;
-		static const std::string ticketNamePattern;
-		static const std::string pricePattern;
-		static const std::string validityPattern;
+		static const std::string stopNamePattern; // nazwa przystanku
+		static const std::string routeNumberPattern; // numer kursu
+		static const std::string timePattern; // czas przyjazdu (godziny i minuty)
+		static const std::string ticketNamePattern; // nazwa biletu
+		static const std::string pricePattern; // cena
+		static const std::string validityPattern; // czas ważności (tylko minuty)
 
-		//Sprawdza czy o danej godzinie tramwaje moga byc jeszcze czynne.
+		// sprawdza, czy czas jest między 5:55 a 21:21
 		static bool isValidTime(int timeInMinutes) {
 			return timeInMinutes >= 5 * 60 + 55 && timeInMinutes <= 21 * 60 + 21;
 		}
 
 	public:
-		//Bierze linie wejscia i tworzy na jej podstawie nowy kurs pod newRoute. Zapisuje
-		//jego numer pod routeId. Zwraca true jesli zakonczono sukcesem, false jesli wystapil blad.
+		// parsuje [line] jako kurs i odpowiednie wartości zapisuje w [routeId] i [newRoute]
+		// wyjście: true - gdy sukces; false - wpp.
 		static bool parseRoute(const std::string& line, int& routeId, Route& newRoute) {
-			//Parsowanie numeru kursu.
 			static const std::regex idRegex("^" + routeNumberPattern);
 
 			std::smatch idMatch;
@@ -75,9 +82,8 @@ namespace {
 				return false;
 			}
 
-			//Parsowanie trasy kursu.
-			unsigned int orderInRoute = 0; //Kolejnosc aktualnie parsowanego przystanku na trasie kursu.
-			int lastTime = 0; //Czas przyjazdu na poprzedni przystanek w minutach.
+			unsigned int orderInRoute = 0;
+			int lastTime = 0;
 
 			static const std::string segmentPattern = "^ " + timePattern + " " + stopNamePattern;
 			static const std::regex segmentRegex(segmentPattern);
@@ -86,17 +92,19 @@ namespace {
 			for (auto it = idMatch.suffix().first; it != line.end(); ) {
 				if (std::regex_search(it, line.end(), segmentMatch, segmentRegex)) {
 					std::string stopName = segmentMatch[3];
-					if (newRoute.find(stopName) != newRoute.end())
-						return false; // Przystanek powtarza sie na trasie kursu.
 
-					// we don't have to catch std::out_of_range, because our regex matching ensures it doesn't happen
+					// jeśli przystanek się powtarza, to błąd
+					if (newRoute.find(stopName) != newRoute.end())
+						return false;
+
+					// nie musimy łapać std::out_of_range, bo nasz regex zapewnia, że nigdy się to nie stanie
 					int hours = stoi(segmentMatch[1]);
 					int minutes = stoi(segmentMatch[2]);
-					int currentTime =  hours * 60 + minutes;
+					int currentTime = hours * 60 + minutes;
 					if (!isValidTime(currentTime))
 						return false;
 
-					//Sprawdzamy czy godziny przyjazdow sa rosnace.
+					// jeśli przystanek wcześniejszy jest na trasie niewcześniej niż późniejszy, to błąd
 					if (lastTime >= currentTime)
 						return false;
 					lastTime = currentTime;
@@ -113,6 +121,8 @@ namespace {
 			return !newRoute.empty();
 		}
 
+		// parsuje [line] jako bilet i odpowiednie wartości zapisuje w [ticketName] i [newTicket]
+		// wyjście: true - gdy sukces; false - wpp.
 		static bool parseTicket(const std::string& line, std::string& ticketName, Ticket& newTicket) {
 			static const std::regex ticketRegex(ticketNamePattern + " " + pricePattern + " " + validityPattern);
 
@@ -132,7 +142,10 @@ namespace {
 				return false;
 		}
 
-		static bool parseJourney(const std::string& line, std::vector<std::string>& stopNames, std::vector<int>& routeNumbers) {
+		// parsuje [line] jako podróż i odpowiednie wartości zapisuje w [stopNames] i [routeNumbers]
+		// wyjście: true - gdy sukces; false - wpp.
+		static bool parseJourney(const std::string& line, std::vector<std::string>& stopNames,
+						std::vector<int>& routeNumbers) {
 			if (line[0] != '?')
 				return false;
 
@@ -158,6 +171,8 @@ namespace {
 					return false;
 			}
 
+			// sprawdzamy, czy przystanków jest dokładnie o jeden więcej niż kursów
+			// i czy jest choć jeden kurs
 			return stopNames.size() == routeNumbers.size() + 1 && !routeNumbers.empty();
 		}
 
@@ -170,41 +185,43 @@ namespace {
 	const std::string Patterns::pricePattern = "([0-9]+)\\.([0-9]{2})";
 	const std::string Patterns::validityPattern = "([1-9][0-9]*)";
 
-	//Na podstawie linii wejscia, tworzy nowy kurs i dodaje go do routes.
-	//Zwraca true jesli zakonczono sukcesem, false jesli wystapil blad.
+	// na podstawie [line] tworzy i dodaje odpowiedni kurs do [routes]
+	// wyjście: true - gdy sukces; false - wpp.
 	bool addRoute(const std::string& line, Routes& routes) {
-		//Parsujemy linie i bierzemy z niej informacje o kursie.
 		int routeId;
 		Route newRoute;
 
 		if (!Patterns::parseRoute(line, routeId, newRoute))
 			return false;
 
-		//Juz istnieje kurs o takim numerze.
+		// jeśli kurs o takim numerze już istnieje, to błąd
 		if (routes.find(routeId) != routes.end())
 			return false;
-		//Wrzucamy nowy kurs do mapy kursow (routes).
+
 		routes[routeId] = newRoute;
 		return true;
 	}
 
+	// na podstawie [line] tworzy i dodaje odpowiedni bilet do [tickets]
+	// wyjście: true - gdy sukces; false - wpp.
 	bool addTicket(const std::string& line, Tickets& tickets) {
-		//Parsujemy linie i bierzemy z niej informacje o bilecie.
 		std::string ticketName;
 		Ticket newTicket;
 
 		if (!Patterns::parseTicket(line, ticketName, newTicket))
 			return false;
 
-		//Juz istnieje bilet o takiej nazwie.
+		// jeśli bilet o takiej nazwie już istnieje, to błąd
 		if (tickets.find(ticketName) != tickets.end())
 			return false;
-		//Wrzucamy nowy bilet do mapy biletow (tickets).
+
 		tickets[ticketName] = newTicket;
 		return true;
 	}
 
-
+	// na podstawie dostępnych kursów [routes] oblicza czas potrzebny na pokonanie podróży
+	// określonej przez [stopNames] i [routeNumbers]
+	// wyjście: potrzebny czas(dodatni); -1 - gdy błąd; -2 - gdy trzeba czekać na przystanku
 	int computeTimeNeededForJourney(const Routes& routes, const std::vector<std::string>& stopNames,
 					const std::vector<int>& routeNumbers) {
 		int timeNeeded = 0;
@@ -222,18 +239,21 @@ namespace {
 				int time1 = stop1.second;
 				int time2 = stop2.second;
 
-				if (time1 < lastTime)
-					return -1;
-				else if (time1 > lastTime && lastTime != -1)
-					if (stopWithWaiting.empty())
-						stopWithWaiting = stopNames[i];
-
-				lastTime = time2;
-
+				// jeśli przystanek wcześniejszy jest na trasie później niż późniejszy, to błąd
 				if (order1 >= order2)
 					return -1;
-				else
-					timeNeeded += time2 - time1;
+
+				// jeśli czas odjazdu z przystanku jest wcześniej niż czas przyjazdu nań, to błąd
+				if (time1 < lastTime) {
+					return -1;
+				}
+				else if (time1 > lastTime && lastTime != -1) {
+					if (stopWithWaiting.empty())
+						stopWithWaiting = stopNames[i];
+				}
+				lastTime = time2;
+
+				timeNeeded += time2 - time1;
 			}
 			catch (std::out_of_range& e) {
 				return -1;
@@ -248,6 +268,8 @@ namespace {
 			return timeNeeded + 1;
 	}
 
+	// znajduje najtańszy zestaw biletów z [tickets], pozwalający przejechać [timeNeeded] minut
+	// wyjście: liczba biletów w zestawie(1-3); 0 - gdy nie da się kupić
 	int findCheapestTickets(int timeNeeded, const Tickets& tickets) {
 		long long bestPrice = LLONG_MAX;
 		std::vector<std::string> optimalTicketSet;
@@ -267,7 +289,7 @@ namespace {
 					ticket[2] = it2.second;
 
 					if (timeNeeded <= ticket[0].second + ticket[1].second + ticket[2].second) {
-						long long newPrice = ticket[0].first + ticket[1].first + ticket[2].first;
+						long long int newPrice = ticket[0].first + ticket[1].first + ticket[2].first;
 						if (newPrice < bestPrice) {
 							bestPrice = newPrice;
 
@@ -282,19 +304,21 @@ namespace {
 			}
 		}
 
-		if (bestPrice == LLONG_MAX)
-			return 0;
+		if (!optimalTicketSet.empty()) {
+			std::cout << "! " << optimalTicketSet[0];
+			for (size_t i = 1; i < optimalTicketSet.size(); ++i)
+				std::cout << "; " << optimalTicketSet[i];
 
-		std::cout << "! " << optimalTicketSet[0];
-		for (size_t i = 1; i < optimalTicketSet.size(); ++i)
-			std::cout << "; " << optimalTicketSet[i];
+			std::cout << std::endl;
+		}
 
-		std::cout << std::endl;
-
-		// size is at most 3, so we can safely return with int
+		// wielkość jest co najwyżej 3, więc możemy bezpiecznie zwrócić w incie
 		return optimalTicketSet.size();
 	}
 
+	// na podstawie dostępnych kursów [routes] i biletów [tickets] znajduje i wypisuje na ekran
+	// najtańszy zestaw biletów, pozwalający przebyć podróż zawartą w [line]
+	// wyjście: liczba biletów w zestawie(1-3); 0 - gdy nie da się kupić; -1 - gdy błąd
 	int findTickets(const std::string& line, const Routes& routes, const Tickets& tickets) {
 		std::vector<std::string> stopNames;
 		std::vector<int> routeNumbers;
@@ -320,7 +344,7 @@ int main() {
 	std::string line;
 	Routes routes;
 	Tickets tickets;
-	tickets[""] = Ticket(0, 0); //Pusty bilet.
+	tickets[""] = Ticket(0, 0);
 	int allFoundTickets = 0;
 
 	for (int i = 1; std::getline(std::cin, line); ++i) {
